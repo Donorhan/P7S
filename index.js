@@ -88,9 +88,8 @@ function run()
 function draw(dt)
 {
     simulation.context.clearRect(0, 0, simulation.size[0], simulation.size[1]);
-
-    for (var i = 0; i < simulation.particles.length; i++) 
-        drawParticle(i);
+    drawParticles();
+    drawJoints();
 }
 
 /**
@@ -133,41 +132,53 @@ function update(dt)
  *
  * @param index Index of the particle
  */
-function drawParticle(index)
+function drawParticles()
 {
-    var p1 = simulation.particles[index].position;
-
-    // Draw the particle
-    simulation.context.beginPath();
+    var pi2 = Math.PI * 2;
     simulation.context.fillStyle = 'rgba(' + simulation.settings.color[0] + ', ' + simulation.settings.color[1] + ', ' + simulation.settings.color[2] + ', 1.0)';
-    simulation.context.arc(p1[0], p1[1], simulation.particles[index].size / 2.0, 0, Math.PI * 2, true);
-    simulation.context.closePath();
-    simulation.context.fill();
-
-    // Draw joints
-    for (var i = index + 1; i < simulation.particles.length; i++) 
+        
+    for (var i = 0; i < simulation.particles.length; i++) 
     {
-        // Easier to manipulate
-        var p2 = simulation.particles[i].position;
+        var p1 = simulation.particles[i].position;
 
-        // Pythagorus theorum to get distance between two points
-        var a = p1[0] - p2[0];
-        var b = p1[1] - p2[1];
-        var dist = Math.sqrt((a * a) + (b * b));
+        simulation.context.beginPath();
+        simulation.context.arc((0.5 + p1[0]) << 0, (0.5 + p1[1]) << 0, simulation.particles[i].size / 2.0, 0, pi2, true);
+        simulation.context.closePath();
+        simulation.context.fill();        
+    }
+}
 
-        if (dist < simulation.settings.proximity[0]) {
+function drawJoints()
+{
+    for (var index = 0; index < simulation.particles.length; index++) 
+    {
+        var p1 = simulation.particles[index].position;
+        
+        // Draw joints
+        for (var i = index + 1; i < simulation.particles.length; i++) 
+        {
+            // Easier to manipulate
+            var p2 = simulation.particles[i].position;
 
-            // Set apparence
-            var opacity = 1.0 - (dist / simulation.settings.proximity[1]);
-            opacity = Math.min(opacity, 0.6);
-            simulation.context.strokeStyle = 'rgba(' + simulation.settings.color[0] + ', ' + simulation.settings.color[1] + ', ' + simulation.settings.color[2] + ', ' + opacity + ')';
+            // Pythagorus theorum to get distance between two points
+            var a = p1[0] - p2[0];
+            var b = p1[1] - p2[1];
+            var dist = Math.sqrt((a * a) + (b * b));
 
-            // Draw
-            simulation.context.beginPath();
-            simulation.context.moveTo(p1[0], p1[1]);
-            simulation.context.lineTo(p2[0], p2[1]);
-            simulation.context.stroke();
-            simulation.context.closePath();
+            if (dist < simulation.settings.proximity[0]) {
+
+                // Set apparence
+                var opacity = 1.0 - (dist / simulation.settings.proximity[1]);
+                opacity = Math.min(opacity, 0.6);
+                simulation.context.strokeStyle = 'rgba(' + simulation.settings.color[0] + ', ' + simulation.settings.color[1] + ', ' + simulation.settings.color[2] + ', ' + opacity + ')';
+
+                // Draw
+                simulation.context.beginPath();
+                simulation.context.moveTo((0.5 + p1[0]) << 0, (0.5 + p1[1]) << 0);
+                simulation.context.lineTo((0.5 + p2[0]) << 0, (0.5 + p2[1]) << 0);
+                simulation.context.stroke();
+                simulation.context.closePath();
+            }
         }
     }
 }
