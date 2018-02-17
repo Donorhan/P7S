@@ -2,26 +2,27 @@
  * Particles structure
  */
 var particles = {
-    "position" : [0.0, 0.0],
-    "velocity" : [0.0, 0.0],
-    "size"     : 0.0
+    position : [0.0, 0.0],
+    velocity : [0.0, 0.0],
+    size     : 0.0
 };
 
 /**
  * Simulation data
  */
 var simulation = {
-    "time"      : 0,
-    "context"   : null,
-    "size"      : [],
-    "particles" : [],
-    "settings"  : {
-        "fullscreen" : true,
-        "gravity"    : 0,
-        "count"      : 100,
-        "color"      : [255, 255, 255],
-        "size"       : [3, 5],
-        "proximity"  : [250, 100]
+    pi2       : Math.PI * 2,
+    time      : 0,
+    context   : null,
+    size      : [],
+    particles : [],
+    settings  : {
+        fullscreen : true,
+        gravity    : 0,
+        count      : 100,
+        color      : [255, 255, 255],
+        size       : [3, 5],
+        proximity  : [250, 100]
     }
 };
 
@@ -47,8 +48,8 @@ function addParticles(amount)
     for (var i = 0; i < amount; i++) 
     {
         var particle = {
-            "position" : [0.0, 0.0], 
-            "velocity" : [0.0, 0.0]
+            position : [0.0, 0.0], 
+            velocity : [0.0, 0.0]
         };
 
         particle.position = [getRandomValue(0, simulation.size[0]), 
@@ -76,8 +77,10 @@ function run()
     simulation.time = now;
 
     // We can work now
-    update(dt);
-    draw(dt);
+    if (document.hasFocus()) {
+        update(dt);
+        draw(dt);        
+    }
 }
 
 /**
@@ -127,14 +130,8 @@ function update(dt)
     }
 }
 
-/**
- * Draw a particle
- *
- * @param index Index of the particle
- */
 function drawParticles()
 {
-    var pi2 = Math.PI * 2;
     simulation.context.fillStyle = 'rgba(' + simulation.settings.color[0] + ', ' + simulation.settings.color[1] + ', ' + simulation.settings.color[2] + ', 1.0)';
         
     for (var i = 0; i < simulation.particles.length; i++) 
@@ -142,23 +139,24 @@ function drawParticles()
         var p1 = simulation.particles[i].position;
 
         simulation.context.beginPath();
-        simulation.context.arc((0.5 + p1[0]) << 0, (0.5 + p1[1]) << 0, simulation.particles[i].size / 2.0, 0, pi2, true);
+        simulation.context.arc((0.5 + p1[0]) << 0, (0.5 + p1[1]) << 0, simulation.particles[i].size * 0.5, 0, simulation.pi2, true);
         simulation.context.closePath();
-        simulation.context.fill();        
+        simulation.context.fill();
     }
 }
 
 function drawJoints()
 {
-    for (var index = 0; index < simulation.particles.length; index++) 
+    var particlesCount = simulation.particles.length;
+    for (var i = 0; i < particlesCount; i++) 
     {
-        var p1 = simulation.particles[index].position;
+        var p1 = simulation.particles[i].position;
         
         // Draw joints
-        for (var i = index + 1; i < simulation.particles.length; i++) 
+        for (var j = i + 1; j < particlesCount; j++) 
         {
             // Easier to manipulate
-            var p2 = simulation.particles[i].position;
+            var p2 = simulation.particles[j].position;
 
             // Pythagorus theorum to get distance between two points
             var a = p1[0] - p2[0];
@@ -166,7 +164,6 @@ function drawJoints()
             var dist = Math.sqrt((a * a) + (b * b));
 
             if (dist < simulation.settings.proximity[0]) {
-
                 // Set apparence
                 var opacity = 1.0 - (dist / simulation.settings.proximity[1]);
                 opacity = Math.min(opacity, 0.6);
@@ -176,8 +173,8 @@ function drawJoints()
                 simulation.context.beginPath();
                 simulation.context.moveTo((0.5 + p1[0]) << 0, (0.5 + p1[1]) << 0);
                 simulation.context.lineTo((0.5 + p2[0]) << 0, (0.5 + p2[1]) << 0);
-                simulation.context.stroke();
                 simulation.context.closePath();
+                simulation.context.stroke();
             }
         }
     }
@@ -197,7 +194,7 @@ function init()
             canvas.height = document.body.clientHeight;            
         }
 
-        var context = canvas.getContext('2d');
+        var context = canvas.getContext('2d', { alpha: false });
         simulation.size[0] = canvas.width;
         simulation.size[1] = canvas.height;
         simulation.context = context;
@@ -206,19 +203,4 @@ function init()
         addParticles(simulation.settings.count);
         run();
     }
-};
-
-/**
- * Disable update when user leave or enter the page
- */
-window.onblur = function (e) 
-{
-    simulation.paused = true;
-};
-
-window.onfocus = function (e) 
-{
-    simulation.time = new Date().getTime();
-    simulation.paused = false;
-};
-
+}
